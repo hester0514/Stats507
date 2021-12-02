@@ -1,20 +1,392 @@
-#!/usr/bin/env python
-# coding: utf-8
+# -*- coding: utf-8 -*-
+# ---
+# jupyter:
+#   jupytext:
+#     formats: ipynb,py:light
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.11.5
+#   kernelspec:
+#     display_name: Python 3
+#     language: python
+#     name: python3
+# ---
 
+# + [markdown] magic_args="[markdown]"
+# ## Topics in Pandas
+# **Stats 507, Fall 2021**
+
+
+# + [markdown] magic_args="[markdown]"
+# ## Contents
+# Add a bullet for each topic and link to the level 2 title header using 
+# the exact title with spaces replaced by a dash. 
+#
+# # + [If-Then](#If-Then)
+# # + [Time Delta](#Time-Delta)
+# # + [Sorting](#Sorting)
+# # + [Timestamp class](#Timestamp-class)
+# # + [Table Styler](#Table-Styler)
+# # + [Pandas.concat](#Pandas.concat)
+# # + [Windowing Operations](#Windowing-Operations)
+# # + [Interpolate](#Pandas-.interpolate()-method)
+# # + [DateTime in Pandas](#DateTime-in-Pandas)
+# # + [Missing Data in Pandas](#Missing-Data-in-Pandas)
+# # + [Python Idioms](#Introduction-to-Python-Idioms)
+# # + [Sparse Data Structures](Sparse-Data-Structures)
+# # + [Pivot Table](#Pivot-Table)
+
+# + [markdown] magic_args="[markdown]"
+# ## If Then
+# **Kailin Wang**
+# **wkailin@umich.edu**
+# -
+
+# %%
+# modules: --------------------------------------------------------------------
+import numpy as np
+import pandas as pd
+from os.path import exists
+
+# + [markdown] magic_args="[markdown]"
+# ## Pandas `if-then`  idioms
+# - The `if-then/if-then-else` idiom is a compact form of if-else that can be implemented to columns in `pd.DataFrame`
+# - Expressed on one column, and assignment to another one or more columns
+# - Use pandas where after you’ve set up a mask
+# -
+
+
+df = pd.DataFrame(
+    {"AAA": [4, 5, 6, 7], "BBB": [10, 20, 30, 40], "CCC": [100, 50, -30, -50]}
+)
+df
+
+# + [markdown] magic_args="[markdown]"
+# ## Pandas `if-then`  idioms
+# - An `if-then` on one column
+# -
+
+
+df.loc[df.AAA >= 5, "BBB"] = -1
+df
+
+# + [markdown] magic_args="[markdown]"
+# - An `if-then` with assignment to 2 columns:
+# -
+
+
+df.loc[df.AAA >= 5, ["BBB", "CCC"]] = 1022
+df
+
+# + [markdown] magic_args="[markdown]"
+# ## Pandas `if-then`  idioms
+# - Use pandas where after you’ve set up a mask
+# -
+
+
+df_mask = pd.DataFrame(
+    {"AAA": [True] * 4, "BBB": [False] * 4, "CCC": [True, False] * 2}
+)
+df.where(df_mask,1022)
+
+# + [markdown] magic_args="[markdown]"
+# ## Pandas `if-then-else`  idioms
+# - if-then-else using NumPy’s where()
+# -
+
+
+df = pd.DataFrame(
+    {"AAA": [4, 5, 6, 7], "BBB": [10, 20, 30, 40], "CCC": [100, 50, -30, -50]}
+)
+df
+df["logic"] = np.where(df["AAA"] > 5, "high", "low")
+df
+
+# + [markdown] magic_args="[markdown]"
+# ## Time Delta
+# **Liuyu Tao**
+# **liuyutao@umich.edu**
+
+# + [markdown] magic_args="[markdown]"
+# ## Overview
+# - Parsing
+# - to_timedelta
+
+# + [markdown] magic_args="[markdown]"
+# ## Parsing
+# - There are several different methods to construct the Timeselta, below are the examples
+# -
+
+
+import pandas as pd
+import datetime
+
+# read as "string"
+print(pd.Timedelta("2 days 3 minutes 36 seconds"))
+# similar to "datetime.timedelta"
+print(pd.Timedelta(days=2, minutes=3, seconds=36))
+# specify the integer and the unit of the integer
+print(pd.Timedelta(2.0025, unit="d"))
+
+# + [markdown] magic_args="[markdown]"
+# ## Sorting
+# **Julia Weber- juliaweb@umich.edu**
+
+# + [markdown] magic_args="[markdown]"
+# ## Sorting- About
+# - Pandas has built in functions that allow the user to sort values in a column or index of a dataframe.
+# - Sorting is important, as a user can look for patterns in the data and easily determine which observations have the highest/lowest values for a certain variable.
+
+# + [markdown] magic_args="[markdown]"
+# ## sort_values() Function
+# - The sort_values() function can be used to order rows of a dataframe by the values of a column.
+# - Default sorts low to high. If we set ascending=False, sorts high to low.
+# -
+
+
+import pandas as pd
+
+names = ["Julia", "James", "Andrew", "Sandy", "Joe"]
+ages = [15, 18, 16, 30, 26]
+test_df = pd.DataFrame({"name" : names, "age" : ages})
+test_df.sort_values("age", ascending=False)
+
+# + [markdown] magic_args="[markdown]"
+# ## sort_index() Function
+# - The sort_index() function can be used to sort the index of a dataframe.
+# - This function is similar to the sort_values() function, but is applied to the index.
+# -
+
+
+sorted_df = test_df.sort_values("age", ascending=False)
+sorted_df.sort_index()
+
+# + [markdown] magic_args="[markdown]"
+# ## Timestamp class
+# **Yuelin He- yuelinhe@umich.edu**
+
+# + [markdown] magic_args="[markdown]"
+# Timestamp is Pandas' equivalent (and usually interchangeable) class of 
+# python’s Datetime. To construct a Timestamp, there are three calling 
+# conventions:
+#
+# 1. Converting a datetime-like string.
+#
+# 1. Converting a float representing a Unix epoch in units of seconds.
+#
+# 1. Converting an int representing a Unix-epoch in units of seconds in a 
+# specified timezone.
+#
+# The form accepts four parameters that can be passed by position or keyword.
+#
+# There are also forms that mimic the API for datetime.datetime (with year, 
+# month, day, etc. passed separately through parameters).
+#
+# See the following code for corresponding examples:
+# -
+
+
+import pandas as pd
+
+## datetime-like string
+print(pd.Timestamp('2021-01-01T12'))
+
+## float, in units of seconds
+print(pd.Timestamp(889088900.5, unit='s'))
+
+##int, in units of seconds, with specified timezone
+print(pd.Timestamp(5201314, unit='s', tz='US/Pacific'))
+
+# + [markdown] magic_args="[markdown]"
+# In Pandas, there are many useful attributes to do quick countings in Timestamp.
+#
+# - Counting the day of the...
+# + year: using *day_of_year*, *dayofyear*
+# - Counting the week number of the year: using *week*, *weekofyear*
+# - Counting the number of days in that month: using *days_in_month*, *daysinmonth*
+#
+# -
+
+
+# Counting the day of the week
+ts = pd.Timestamp(2018, 3, 21)
+print(ts.day_of_week)
+print(ts.dayofweek)
+
+# Counting the day of the year
+print(ts.day_of_year)
+print(ts.dayofyear)
+
+# Counting the week number of the year
+print(ts.week)
+print(ts.weekofyear)
+
+# Counting the number of days in that month
+print(ts.days_in_month)
+print(ts.daysinmonth)
+
+# + [markdown] magic_args="[markdown]"
+# Whether certain characteristic is true can also be determined.
+#
+# - Deciding if the date is the start of the...
+# + month: using *is_month_start* [markdown]
+# # - Similarly, deciding if the date is the end of the...
+# + month: using *is_month_end* [markdown]
+# # - Deciding if the year is a leap year: using *is_leap_year*
+# -
+
+
+# # Start?
+print(pd.Timestamp(2000, 1, 1).is_year_start)
+print(pd.Timestamp(2000, 2, 1).is_quarter_start)
+print(pd.Timestamp(2000, 3, 1).is_month_start)
+
+# # End?
+print(pd.Timestamp(2000, 12, 31).is_year_end)
+print(pd.Timestamp(2000, 12, 30).is_quarter_end)
+print(pd.Timestamp(2000, 11, 30).is_month_start)
+
+# Leap year?
+print(pd.Timestamp(2000, 12, 31).is_leap_year)
+print(pd.Timestamp(2001, 12, 30).is_leap_year)
+
+# + [markdown] magic_args="[markdown]"
+#
+# Reference: 
+# https://pandas.pydata.org/docs/reference/api/pandas.Timestamp.html#
+
+# + [markdown] magic_args="[markdown]"
+# ## Table Styler
+# ### Manipulate many parameters of a table using the table Styler object in pandas.
+# **Xiying Gao**
+
+# + [markdown] magic_args="[markdown]"
+# ## Pandas.concat
+# **Ziyin Chen- email: edwardzc@umich.edu**
+
+# + [markdown] magic_args="[markdown]"
+# ## General Discription
+# * Concatenate pandas objects along a particular axis with optional set logic along the other axes.
+#
+# * Can also add a layer of hierarchical indexing on the concatenation axis, which may be useful if the labels are the same (or overlapping) on the passed axis number.
+
+# + [markdown] magic_args="[markdown]"
+# ## concat
+# * used to combine tow dataframe or combining two series 
+#     1. can be used to join two DataFrame or Series with or without similar column with the inclusion of `join = `
+#     2. can be used to join two DataFrames either vertially or horizontally with `axis = 1`
+
+
+# + [markdown] magic_args="[markdown]"
+# ## Example 1 
+# join two dataframe horizontaly and vertially
+# -
+
+
+import pandas as pd 
+from IPython.display import display
+
+dic1 = {'Name': ['Allen', 'Bill','Charle','David','Ellen'],
+      'number':[1,2,3,4,5],
+      'letter':['a','b','c','d','e']}
+dic2 = {'A':['a','a','a','a','a'],
+       'B':['b','b','b','b','b'],
+       'number':[10,11,12,13,14]}
+df1 = pd.DataFrame(dic1)
+df2 = pd.DataFrame(dic2)
+display(df1)
+display(df2)
+
+# + [markdown] magic_args="[markdown]"
+# join vertially 
+# -
+
+
+df = pd.concat([df1,df2])
+display(df)
+
+# + [markdown] magic_args="[markdown]"
+# join horizontally 
+# -
+
+
+df = pd.concat([df1,df2],axis =1 )
+display(df)
+
+# + [markdown] magic_args="[markdown]"
+# ## Example 2 
+# join with the common column
+#
+# -
+
+
+df = pd.concat([df1,df2],join='inner')
+display(df)
+
+# + [markdown] magic_args="[markdown]"
+# ## Windowing Operations
+# **Mengtong Hu- mengtong@umich.edu**
+
+# + [markdown] magic_args="[markdown]"
+# - an operation that perfroms an aggregation over a sliding
+#   partition of values on Series or DataFrame, similar to `groubby`.
+
+# + [markdown] magic_args="[markdown]"
+# ### Windowing Operations
+
+# + [markdown] magic_args="[markdown]"
+# - Specify the window=n argument in `.rolling()` for the window size. 
+# - After specifiying the window size, apply the appropriate
+#   statistical function on top of it. Examples of statistical
+#   functions include: `.sum()`, `.mean()`, `.median()`, `.var()`, `.corr()`.
+# - If the offest is based on a time based column such as 'window = "2D"', the correspond
+#     time based index must be monotonic.
+# - The example below computes the sum of 'A' for previous 2 days
+# -
+
+
+df = pd.DataFrame(np.arange(10),
+   index = pd.date_range('1/1/2000', periods=10),
+   columns = ['A'])
+df['default sum'] = df['A'].rolling(window=3).sum()
+df
+
+# + [markdown] magic_args="[markdown]"
+# ### Windowing Operations
+# - The closed parameter in `.rolling()` is used to decide the inclusions
+#     of the interval endpoints in rolling window 
+#     - 'right' close right endpoint
+#     - 'left' close left endpoint
+#     - 'both' close both endpoints
+#     - 'neither' open endpoints
+# -
+
+
+offset = '2D'
+df["right"] = df.rolling(offset, closed="right").A.sum()  # default
+df["both"] = df.rolling(offset, closed="both").A.sum()
+df["left"] = df.rolling(offset, closed="left").A.sum()
+df["neither"] = df.rolling(offset, closed="neither").A.sum()
+df
+
+# + [markdown] magic_args="[markdown]"
+# ### Windowing Operations
+# - `.apply()` function takes an extra func argument and performs self-defined rolling computations.
+
+# + [markdown] magic_args="[markdown]"
 # ## **Name**  : *Xin Luo*
 # ## **EMAIL**  :  *luosanj@umich.edu*
-
+# -
 # #  Question 0
-# 
+#
 # ##  Pandas .interpolate() method
-# 
+#
 # * Method *interpolate* is very useful to fill NaN values.
 # * By default, NaN values can be filled by other values with the same index for different methods.
 # * Please note that NaN values in DataFrame/Series with MultiIndex can be filled by 'linear' method as
 # <code>method = 'linear' </code>. 
-
-# In[ ]:
-
 
 import pandas as pd
 import numpy as np
@@ -24,22 +396,15 @@ a.interpolate(method = 'linear')
 
 # ### Parameters in .interpolate()
 # ##### *parameter **'method'** : *str*, default *'linear'
-# 
-# 
+#
+#
 # * Most commonly used methods:
 #     * 1. **'linear'** : linear regression mind to fit the missing ones.
 #     * 2. **'pad', 'limit'** :  Fill in NaNs using existing values. Note:Interpolation through padding means copying the value just before a missing entry.While using padding interpolation, you need to specify a limit. The limit is the maximum number of nans the method can fill consecutively.
 #     * 3. **'polynomial', 'order'** : Polynomial regression mind with a set order to fit the missing ones. Note : NaN of the first column remains, because there is no entry before it to use for interpolation.
 
-# In[ ]:
-
-
 m =  pd.Series([0, 1, np.nan, np.nan, 3, 5, 8])
 m.interpolate(method = 'pad', limit = 2)
-
-
-# In[ ]:
-
 
 n = pd.Series([10, 2, np.nan, 4, np.nan, 3, 2, 6]) 
 n.interpolate(method = 'polynomial', order = 2)
@@ -49,9 +414,6 @@ n.interpolate(method = 'polynomial', order = 2)
 # * 1. axis = 0 : Axis to interpolate along is index.
 # * 2. axis = 1 : Axis to interpolate along is column.
 #     
-
-# In[ ]:
-
 
 k = pd.DataFrame({'a' : [1, 2, np.nan, 5], 'b' : [4, np.nan, 6, 8]})
 k.interpolate(method = 'linear', axis = 0)
@@ -83,7 +445,7 @@ k.interpolate(method = 'linear', axis = 1)
 #   
 
 # ## Contents
-# 
+#
 # + [DateTime in Pandas](#DateTime-in-Pandas) 
 # + [Create DatetimeIndex](#Create-DatetimeIndex) 
 # + [Convert from other types](#Convert-from-other-types) 
@@ -92,109 +454,70 @@ k.interpolate(method = 'linear', axis = 1)
 # + [Operations on Datetime](#Operations-on-Datetime) 
 
 # ## DateTime in Pandas
-# 
+#
 # *Qi, Bingnan*
 # bingnanq@umich.edu
-# 
+#
 # - Pandas contains a collection of functions and features to deal with time series data. A most commonly used class is `DatetimeIndex`.
-# 
+#
 
 # ## Create DatetimeIndex
-# 
+#
 # - A `DatetimeIndex` array can be created using `pd.date_range()` function. The `start` and `end` parameter can control the start and end of the range and `freq` can be `D` (day), `M` (month), `H` (hour) and other common frequencies.
 
-# In[ ]:
-
-
 pd.date_range(start='2020-01-01', end='2020-01-05', freq='D')
-
-
-# In[ ]:
-
 
 pd.date_range(start='2020-01-01', end='2021-01-01', freq='2M')
 
 
 # ## Convert from other types
-# 
+#
 # - Other list-like objects like strings can also be easily converted to a pandas `DatetimeIndex` using `to_datetime` function. This function can infer the format of the string and convert automatically.
-
-# In[ ]:
-
 
 pd.to_datetime(["2020-01-01", "2020-01-03", "2020-01-05"])
 
 
 # - A `format` keyword argument can be passed to ensure specific parsing.
 
-# In[ ]:
-
-
 pd.to_datetime(["2020/01/01", "2020/01/03", "2020/01/05"], format="%Y/%m/%d")
 
 
 # ## Indexing with DatetimeIndex
-# 
+#
 # - One of the main advantage of using the `DatetimeIndex` is to make index a time series a lot easier. For example, we can use common date string to directly index a part of the time series.
-
-# In[ ]:
-
 
 idx = pd.date_range('2000-01-01', '2021-12-31', freq="M")
 ts = pd.Series(np.random.randn(len(idx)), index=idx)
 
 ts['2018-09':'2019-04']
 
-
-# In[ ]:
-
-
 ts['2021-6':]
 
 
 # ## Date/time components in the DatetimeIndex
-# 
+#
 # - The properties of a date, e.g. `year`, `month`, `day_of_week`, `is_month_end` can be easily obtained from the `DatetimeIndex`.
-
-# In[ ]:
-
 
 idx.isocalendar()
 
 
 # ## Operations on Datetime
-# 
+#
 # - We can shift a DatetimeIndex by adding or substracting a `DateOffset`
-
-# In[ ]:
-
 
 idx[:5] + pd.offsets.Day(2)
 
-
-# In[ ]:
-
-
 idx[:5] + pd.offsets.Minute(1)
-
-
-# In[ ]:
-
 
 get_ipython().system('/usr/bin/env python')
 # coding: utf-8
 
 
 # ### youngwoo Kwon
-# 
+#
 # kedwaty@umich.edu
 
 # # Question 0 - Topics in Pandas
-
-# In[1]:
-
-# In[ ]:
-
 
 import pandas as pd
 import numpy as np
@@ -205,23 +528,18 @@ import time
 
 
 # ## Missing Data in Pandas 
-# 
+#
 # Pandas is very __flexible__ to the missing values
-# 
+#
 # * NaN is the default missing value
-# 
+#
 # * However, we should deal with the different types such as integer, boolean, or general object.
-# 
+#
 # * We should also consider that "missing" or "not available" or "NA".
 
 # ## Detecting the Missing Values
-# 
+#
 # * Pandas provides `isna()` and `notna()` function to detect the missing values
-
-# In[2]:
-
-# In[ ]:
-
 
 df = pd.DataFrame(
     np.random.randn(4, 3),
@@ -232,58 +550,23 @@ df["five"] = df["one"] < 0
 df2 = df.reindex(["a", "b", "c", "d", "e"])
 df2
 
-
-# In[3]:
-
-# In[ ]:
-
-
 df2.isna()
-
-
-# In[4]:
-
-# In[ ]:
-
 
 df2.notna()
 
 
 # ## More about the Missing Values
-# 
+#
 # * In Python, nan's don't compare equal, but None's do.
-# 
+#
 # * NaN is a float, but pandas provides a nullable integer array
-
-# In[5]:
-
-# In[ ]:
-
 
 None == None
 
-
-# In[6]:
-
-# In[ ]:
-
-
 np.nan == np.nan
-
-
-# In[7]:
-
-# In[ ]:
-
 
 print(df2.iloc[1,1])
 print(type(df2.iloc[1,1]))
-
-
-# In[8]:
-
-# In[ ]:
-
 
 pd.Series([1, 2, np.nan, 4], dtype=pd.Int64Dtype())
 
@@ -295,7 +578,7 @@ pd.Series([1, 2, np.nan, 4], dtype=pd.Int64Dtype())
 # ## Contents
 # Add a bullet for each topic and link to the level 2 title header using 
 # the exact title with spaces replaced by a dash. 
-# 
+#
 # + [Introduction to Python Idioms](https://github.com/boyazh/Stats507/blob/main/pandas_notes/pd_topic_boyazh.py) 
 # + [Topic 2 Title](#Topic-2-Title)
 
@@ -303,27 +586,17 @@ pd.Series([1, 2, np.nan, 4], dtype=pd.Int64Dtype())
 # Python Idioms
 # **Boya Zhang**
 
-# In[ ]:
-
-
 get_ipython().system('/usr/bin/env python')
 # coding: utf-8
-
-
-# In[ ]:
-
-
-
-
 
 # # Question 0
 
 # ## Introduction to Python Idioms  
 #   
 # Boya Zhang (boyazh@umich.edu)  
-# 
+#
 # 10.16.21
-# 
+#
 
 # ## Overview  
 #   
@@ -332,14 +605,9 @@ get_ipython().system('/usr/bin/env python')
 # 3. building criteria
 
 # ## 1. if-then/ if-then-else 
-# 
+#
 # 1.1 You can use if-then to select specific elements on one column, and add assignments to another one or more columns: 
 #         
-
-# In[21]:
-
-# In[ ]:
-
 
 import pandas as pd
 df = pd.DataFrame({"A": [1, 3, 5, 7, 9], "B": [10, 20, 30, 40, 50], "C": [100, 200, 300, 400, 500]})
@@ -348,21 +616,11 @@ df
 
 # * To assign to one or more column:
 
-# In[22]:
-
-# In[ ]:
-
-
 df.loc[df.A > 5, 'B'] = '> 5'
 df
 
 
 # * or
-
-# In[23]:
-
-# In[ ]:
-
 
 df.loc[df.A > 5, ['B','C']] = '> 5'
 df
@@ -370,28 +628,14 @@ df
 
 # * You can add another line with different logic, to do the ”-else“
 
-# In[25]:
-
-# In[ ]:
-
-
 df.loc[df.A <= 5, ['B','C']] = '< 5'
 df
 
 
 # 1.2 You can also apply "if-then-else" using Numpy's where( ) function
 
-# In[28]:
-
-# In[ ]:
-
-
 import numpy as np
 import pandas as pd
-
-
-# In[ ]:
-
 
 df = pd.DataFrame({"A": [1, 3, 5, 7, 9], "B": [10, 20, 30, 40, 50], "C": [100, 200, 300, 400, 500]})
 df['new'] = np.where(df['A'] > 5, '> 5', '< 5')
@@ -402,54 +646,24 @@ df
 
 # You can split a data frame with a boolean criterion
 
-# In[38]:
-
-# In[ ]:
-
-
 import numpy as np
 import pandas as pd
-
-
-# In[ ]:
-
 
 df = pd.DataFrame({"A": [1, 3, 5, 7, 9], "B": [10, 20, 30, 40, 50], "C": [100, 200, 300, 400, 500]})
 df
 
-
-# In[39]:
-
-# In[ ]:
-
-
 df[df['A'] > 5]
-
-
-# In[40]:
-
-# In[ ]:
-
 
 df[df['A'] <= 5]
 
 
 # ## 3. Building criteria 
 # You can build your own selection criteria using "**and**" or "**or**".  
-# 
+#
 # 3.1 "... and"
-
-# In[49]:
-
-# In[ ]:
-
 
 import numpy as np
 import pandas as pd
-
-
-# In[ ]:
-
 
 df = pd.DataFrame({"A": [1, 3, 5, 7, 9], "B": [10, 20, 30, 40, 50], "C": [100, 200, 300, 400, 500]})
 df
@@ -457,30 +671,15 @@ df
 
 # * ...and
 
-# In[50]:
-
-# In[ ]:
-
-
 df.loc[(df["B"] < 25) & (df["C"] >= 20), "A"]
 
 
 # * ...or
 
-# In[51]:
-
-# In[ ]:
-
-
 df.loc[(df["B"] < 25) | (df["C"] >= 40), "A"]
 
 
 # * you can also assign new value to a existing column using this method
-
-# In[52]:
-
-# In[ ]:
-
 
 df.loc[(df["B"] > 40) | (df["C"] >= 300), "A"] = 'new'
 df
@@ -491,8 +690,6 @@ df
 # * "if-then-else" allows you easily change the current column or add additional new columns based on the value of a specific column
 # * "Splitting" allows you quickly select specific rows based on the value of a specific column
 # * "Building criteria" allows you select specific data from one column or assign new values to one column based on the criteria you set up on other columns
-
-# In[ ]:
 
 # ## Topic Title
 # Python Idioms
@@ -506,7 +703,7 @@ df
 #      - fill_valueNone or float value, default None (NaN)
 #      - levelint or name
 #      - Returns: series
-# 
+#
 # ## 2. Code Example
 # ```python
 # a = pd.Series([1, 1, 1, np.nan], index=['a', 'b', 'c', 'd'])
@@ -516,22 +713,22 @@ df
 # ## 3. Ouput and Explanation
 # ```
 # a :
-# 
+#
 # a    1.0
 # b    1.0
 # c    1.0
 # d    NaN
 # ```
-# 
+#
 # ```
 # b: 
-# 
+#
 # a    1.0
 # b    NaN
 # d    1.0
 # e    NaN
 # ```
-# 
+#
 # ```
 # a    False
 # b     True
@@ -543,13 +740,10 @@ df
 # The function tells the equivalence of corresponding elements in a and b, where the 'True' means 'not equal', and 'False' means 'equal'.
 
 # # Topics in Pandas
-# 
+#
 # ## Sparse Data Structures
-# 
+#
 # #### Author: Chittaranjan (chitt@umich.edu)
-
-# In[ ]:
-
 
 # imports
 import pandas as pd
@@ -569,10 +763,7 @@ import numpy as np
 #     - Type of non-omitted values (Eg: float, int etc)
 #     - Value of the elements in the array that aren't actually stored
 # (Eg: 0, nan)
-# 
-
-# In[ ]:
-
+#
 
 s = pd.Series(pd.arrays.SparseArray([1] * 2 + [np.nan] * 8))
 s
@@ -586,9 +777,6 @@ s
 # being consumed by the Series/DataFrame
 # - Comparing memory usage between a SparseArray and a regular python list
 # represented as a Series depicts the memory efficiency of SparseArrays
-
-# In[ ]:
-
 
 N = 1000  # number of elements to be represented
 
@@ -639,9 +827,6 @@ _ = plt.title("Comparison of Memory Usage (Size=1000)")
 #  - **pd.pivot_table(data, values = None, index = None, aggfunc = 'mean'...)** can take more parameters
 #  - Requires data and index parameter, data is the dataFrame passed into the function, index allow us to group the data 
 
-# In[2]:
-
-
 #import packages
 import pandas as pd
 import numpy as np
@@ -657,18 +842,12 @@ pd.pivot_table(recs2015, index = ['REGIONC','DOEID'])
 #  - Apply different aggregation function for different feature
 #  - We can calculate mean of NWEIGHT and sum of CDD65 after groupbying regions
 
-# In[3]:
-
-
 pd.pivot_table(recs2015, index = 'REGIONC',aggfunc={'NWEIGHT':np.mean,'CDD65':np.sum, 'HDD65':np.sum})
 
 
 # ### Pivot table: aggfunc functionality
 #  - Aggregate on specific features with values parameter
 #  - Meanwhile, can use mulitple aggfunc via a list
-
-# In[4]:
-
 
 pd.pivot_table(recs2015, index = 'REGIONC', values = 'NWEIGHT', aggfunc = [np.mean, len])
 
@@ -677,9 +856,6 @@ pd.pivot_table(recs2015, index = 'REGIONC', values = 'NWEIGHT', aggfunc = [np.me
 #  - Find relationship between feature with columns parameter
 #  - UATYP10 - A categorical data type representing census 2010 urban type
 #  -         U: Urban Area; R: Rural; C: Urban Cluster
-
-# In[5]:
-
 
 pd.pivot_table(recs2015,index='REGIONC',columns='UATYP10',values='NWEIGHT',aggfunc=np.sum)
 
